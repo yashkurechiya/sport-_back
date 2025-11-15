@@ -7,6 +7,7 @@ import { db } from "./db/db.js";
 import { router } from "./routes/story.js";
 import { sportRouter } from "./routes/sports.js";
 import sportDRouter from "./routes/sportD.js";
+import { touRouter } from "./routes/tournament.js";
 
 dotenv.config();
 db();
@@ -20,6 +21,7 @@ app.use(bodyParser.json());
 app.use('/admin', router);
 app.use("/sport", sportRouter);
 app.use("/api", sportDRouter);
+app.use("/tour/api", touRouter);
 
 app.get("/", (req, res) => {
   res.send("Server is running ✅");
