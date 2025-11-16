@@ -8,6 +8,8 @@ import { router } from "./routes/story.js";
 import { sportRouter } from "./routes/sports.js";
 import sportDRouter from "./routes/sportD.js";
 import { touRouter } from "./routes/tournament.js";
+import userRouter from "./routes/authRoutes.js";
+import usRouter from "./routes/userRoutes.js";
 
 dotenv.config();
 db();
@@ -22,6 +24,8 @@ app.use('/admin', router);
 app.use("/sport", sportRouter);
 app.use("/api", sportDRouter);
 app.use("/tour/api", touRouter);
+app.use("/api/auth", userRouter);
+app.use("/api/users", usRouter);
 
 app.get("/", (req, res) => {
   res.send("Server is running ✅");
