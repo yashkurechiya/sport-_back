@@ -10,6 +10,7 @@ import sportDRouter from "./routes/sportD.js";
 import { touRouter } from "./routes/tournament.js";
 import userRouter from "./routes/authRoutes.js";
 import usRouter from "./routes/userRoutes.js";
+// import { payRouter } from "./routes/payment.js";
 
 dotenv.config();
 db();
@@ -23,9 +24,10 @@ app.use(bodyParser.json());
 app.use('/admin', router);
 app.use("/sport", sportRouter);
 app.use("/api", sportDRouter);
-app.use("/tour/api", touRouter);
+app.use("/api/tour", touRouter);
 app.use("/api/auth", userRouter);
 app.use("/api/users", usRouter);
+// app.use("/api/payment", payRouter)
 
 app.get("/", (req, res) => {
   res.send("Server is running ✅");
