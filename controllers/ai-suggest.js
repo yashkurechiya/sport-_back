@@ -1,37 +1,51 @@
-
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
 dotenv.config();
-// import { apiKey } from "../server.js";
 
-const apiKey =  process.env.GEMINI_API_KEY;
+const apiKey = process.env.GEMINI_API_KEY;
 
 if (!apiKey) {
-  console.error("❌ ERROR: GEMINI_API_KEY is not set in the .env file.");
+  console.error("❌ ERROR: GEMINI_API_KEY is missing");
   process.exit(1);
 }
+
 const genAI = new GoogleGenAI(apiKey);
 
 const suggest = async (req, res) => {
-  const user = req.body;
+  // 🔹 Always log once in production (can remove later)
+  console.log("REQ BODY:", req.body);
 
-  
-  
+  // 🔹 Read exactly what frontend sends
+  const { height, weight, hobbies, goals } = req.body;
 
+  // 🔹 Safe validation (NO false negatives)
+  if (
+    height === undefined ||
+    weight === undefined ||
+    typeof hobbies !== "string" ||
+    typeof goals !== "string"
+  ) {
+    return res.status(400).json({
+      message: "Required fields missing or invalid",
+      expected: ["height", "weight", "hobbies", "goals"],
+      received: req.body,
+    });
+  }
+
+  // 🔹 SAME PROMPT (cleaned but unchanged meaning)
   const prompt = `
 You are an AI sports career advisor.
 
 User details:
- 
-- Height: ${user.height}
-- Weight: ${user.weight}
-- Hobbies: ${user.hobbies}
- 
-- Goals: ${user.goals}
+- Height: ${height}
+- Weight: ${weight}
+- Hobbies: ${hobbies}
+- Goals: ${goals}
 
-Suggest 2 sports for the user. 
-Return the response in the following JSON format:
+Suggest 2 sports that best suit the user.
+
+Return the response strictly in the following JSON format:
 
 {
   "sports": [
@@ -45,33 +59,35 @@ Return the response in the following JSON format:
   ]
 }
 
-  Total words must be less than 250.
+Total words must be less than 250.
 `;
 
   try {
-    // ✅ Use correct model name
     const response = await genAI.models.generateContent({
       model: "gemini-2.5-flash",
       contents: prompt,
-      config: {
-        systemInstruction: prompt,
-      },
     });
-    
+
     const aiText = response.text;
 
-    console.log("✅ AI Response Generated Successfully");
-    console.log(aiText);
+    console.log("✅ AI response generated");
 
-    res.json(aiText);
+    return res.status(200).json({
+      success: true,
+      data: aiText,
+    });
   } catch (error) {
     console.error("❌ Gemini API Error:", error);
-    res.status(500).json({
-      message: "Error generating suggestion. Please check server logs.",
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to generate sports suggestion",
       error: error.message,
     });
   }
-}
+};
+
+export { suggest };
 
 const getsuggest = async (req, res) => {
   const user = req.query;
