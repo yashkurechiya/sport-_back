@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
-import { getsuggest, suggest } from "./controllers/ai-suggest.js";
+import {   suggest } from "./controllers/ai-suggest.js";
 import { db } from "./db/db.js";
 import { router } from "./routes/story.js";
 import { sportRouter } from "./routes/sports.js";
@@ -52,7 +52,7 @@ app.get("/", (req, res) => {
 
 app.post("/api/suggest-sport", suggest);
 
-app.get("/api/suggest-sport", getsuggest);
+// app.get("/api/suggest-sport", getsuggest);
 
 
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
