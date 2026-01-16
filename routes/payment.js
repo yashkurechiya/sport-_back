@@ -1,7 +1,9 @@
-// import express from 'express'
-// import { createOrder, verifyPayment } from '../controllers/razorPay.js';
+import express from 'express';
+import { createOrder, verifyPayment } from '../controllers/paymentController.js';
+import verifyToken from '../middlewares/authMiddlewares.js';
 
-//  export const payRouter = express.Router();
+const Prouter = express.Router();
+Prouter.post("/create-order", createOrder);
+Prouter.post("/verify",  verifyToken,verifyPayment);
 
-// payRouter.post('/create-order', createOrder);
-// payRouter.post('/verify', verifyPayment)
+export default Prouter;

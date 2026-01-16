@@ -74,10 +74,9 @@ const tournamentSchema = new mongoose.Schema({
     default: 0
   },
 
-  state: {
-    type: String,
-    default: "Upcoming"
-  },
+  // computedState: {
+  //   type: String,
+  // },
 
   category: {
     type: String
@@ -95,6 +94,8 @@ const tournamentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
       },
+      paymentId : String,
+      orderId : String,
       enrolledAt: {
         type: Date,
         default: Date.now
@@ -107,6 +108,33 @@ const tournamentSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+tournamentSchema.virtual("computedState").get(function () {
+  const now = new Date();
+
+  // If no registration deadline
+  if (!this.registrationDeadline) {
+    return now < this.date ? "Upcoming" : "Outdated";
+  }
+
+  // Before tournament starts
+  if (now < this.date) {
+    return "Upcoming";
+  }
+
+  // Tournament started and registration still open
+  if (now >= this.date && now <= this.registrationDeadline) {
+    return "Started";
+  }
+
+  // Registration deadline passed
+  return "Outdated";
+});
+
+
+
+tournamentSchema.set("toJSON", { virtuals: true });
+tournamentSchema.set("toObject", { virtuals: true });
+
 
 const Tournament = mongoose.model("Tournament", tournamentSchema);
 

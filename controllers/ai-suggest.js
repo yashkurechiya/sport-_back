@@ -60,10 +60,8 @@ Return the response in the following JSON format:
         systemInstruction: prompt,
       },
     });
-    // const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    // const result = await model.generateContent(prompt);
+    
     const aiText = response.text;
-    // const aiText = response?.results?.[0]?.content?.[0]?.text || "";
 
     console.log("✅ AI Response Generated Successfully");
     console.log(aiText);

@@ -5,6 +5,12 @@ import authorizeRoles from '../middlewares/roleMiddleware.js';
 
 export const touRouter = express.Router();
 
+const statePriority = {
+    Started : 1,
+    Upcoming : 2,
+    Outdated : 3
+}
+
 touRouter.post('/create', verifyToken, authorizeRoles("admin"), async (req, res) => {
     try {
         const tournament = new Tournament({ ...req.body, createdBy: req.user.id })
@@ -24,29 +30,28 @@ touRouter.post('/create', verifyToken, authorizeRoles("admin"), async (req, res)
     }
 })
 
-touRouter.get('/getTournament', async (req, res) => {
-    try {
-        const tournaments = await Tournament.find().sort({ date: 1 });
-        const today = new Date();
+touRouter.get("/getTournament", async (req, res) => {
+  try {
+    const tournaments = await Tournament.find();
+    const sortedTour = tournaments.sort((a,b) => {
+        return (
+            statePriority[a.computedState] - statePriority[b.computedState]
+        );
+    });
 
-        const enhanced = tournaments.map(t => {
-            const tDate = new Date(t.date);
+    res.status(200).json({
+      success: true,
+      data: sortedTour
+    });
 
-            let status = "";
-            if (tDate > today) status = "upcoming";
-            else if (tDate.toDateString() === today.toDateString()) status = "started";
-            else status = "outdated";
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
 
-            return {
-                ...t._doc,
-                status
-            };
-        });
-        res.json({ success: true, data: enhanced });
-    } catch (error) {
-        res.status(500).json({ succcess: false, message: error.message });
-    }
-})
 
 touRouter.get('/my-tournaments', verifyToken, authorizeRoles("admin"), async (req, res) => {
     try {
