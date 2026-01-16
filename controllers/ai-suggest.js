@@ -16,21 +16,18 @@ const genAI = new GoogleGenAI(apiKey);
 const suggest = async (req, res) => {
   const user = req.body;
 
-  if (!user || !user.name) {
-    return res.status(400).json({ message: "User data is missing or incomplete." });
-  }
+  
+  
 
   const prompt = `
 You are an AI sports career advisor.
 
 User details:
-- Name: ${user.name}
-- Gender: ${user.gender}
-- Age: ${user.age}
+ 
 - Height: ${user.height}
 - Weight: ${user.weight}
 - Hobbies: ${user.hobbies}
-- Any Disability: ${user.disability}
+ 
 - Goals: ${user.goals}
 
 Suggest 2 sports for the user. 
@@ -79,24 +76,20 @@ Return the response in the following JSON format:
 const getsuggest = async (req, res) => {
   const user = req.query;
 
-  if (!user || !user.name) {
+  if (!user || !user.height) {
     return res.status(400).json({ message: "User data is missing or incomplete." });
   }
-console.log(user.name);
-console.log(user.hobbies);
+ 
 
 
   const prompt = `
 You are an AI sports career advisor.
 
 User details:
-- Name: ${user.name}
-- Gender: ${user.gender}
-- Age: ${user.age}
+ 
 - Height: ${user.height}
 - Weight: ${user.weight}
 - Hobbies: ${user.hobbies}
-- Any Disability: ${user.disability}
 - Goals: ${user.goals}
 
  Based on this, suggest 2 sports that best suit them.
@@ -137,7 +130,7 @@ Total words must be less than 250.
     const aiText = response.text;
 
     console.log("✅ AI Response Generated Successfully");
-    console.log(response.text);
+   
 
     res.json( aiText);
 
