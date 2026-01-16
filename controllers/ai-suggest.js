@@ -87,7 +87,7 @@ Total words must be less than 250.
   }
 };
 
-export { suggest };
+ 
 
 const getsuggest = async (req, res) => {
   const user = req.query;
