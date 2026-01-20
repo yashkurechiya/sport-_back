@@ -4,14 +4,13 @@ import Tournament from "../models/tournament.js";
 
 export const createOrder = async (req, res) => {
   try {
-    const { amount } = req.body;
-
+    var { amount } = req.body;
+    
     if (!amount || amount <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid amount"
-      });
+      amount = 1;
     }
+
+    
 
     const order = await razorpay.orders.create({
       amount: amount * 100, // INR → paise
@@ -40,6 +39,9 @@ export const verifyPayment = async (req, res) => {
       tournamentId
     } = req.body;
 
+    console.log(razorpay_order_id, razorpay_payment_id,razorpay_signature, tournamentId);
+    
+
     // 🔐 Auth safety
     if (!req.user || !req.user.id) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -54,6 +56,7 @@ export const verifyPayment = async (req, res) => {
       .createHmac("sha256", process.env.RAZORPAY_SECRET_KEY)
       .update(body)
       .digest("hex");
+      
 
     if (expectedSignature !== razorpay_signature) {
       return res.status(400).json({ message: "Payment verification failed" });

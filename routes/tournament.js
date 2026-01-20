@@ -6,18 +6,15 @@ import authorizeRoles from '../middlewares/roleMiddleware.js';
 export const touRouter = express.Router();
 
 const statePriority = {
-    Started : 1,
-    Upcoming : 2,
-    Outdated : 3
+    Started: 1,
+    Upcoming: 2,
+    Outdated: 3
 }
 
 touRouter.post('/create', verifyToken, authorizeRoles("admin"), async (req, res) => {
     try {
         const tournament = new Tournament({ ...req.body, createdBy: req.user.id })
         await tournament.save();
-
-        console.log("BACKEND RECEIVED:", req.body);
-
 
         res.status(201).json({
             success: true,
@@ -31,26 +28,62 @@ touRouter.post('/create', verifyToken, authorizeRoles("admin"), async (req, res)
 })
 
 touRouter.get("/getTournament", async (req, res) => {
-  try {
-    const tournaments = await Tournament.find();
-    const sortedTour = tournaments.sort((a,b) => {
-        return (
-            statePriority[a.computedState] - statePriority[b.computedState]
-        );
-    });
+    try {
+        const tournaments = await Tournament.find();
+        const sortedTour = tournaments.sort((a, b) => {
+            return (
+                statePriority[a.computedState] - statePriority[b.computedState]
+            );
+        });
 
-    res.status(200).json({
-      success: true,
-      data: sortedTour
-    });
+        res.status(200).json({
+            success: true,
+            data: sortedTour
+        });
 
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
 });
+
+
+touRouter.delete(
+  "/deleteTournament/:id",
+  verifyToken,
+  authorizeRoles("me"),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const tournament = await Tournament.findById(id);
+
+      if (!tournament) {
+        return res.status(404).json({
+          success: false,
+          message: "Tournament not found"
+        });
+      }
+
+      await Tournament.findByIdAndDelete(id);
+
+      res.status(200).json({
+        success: true,
+        message: "Tournament removed successfully"
+      });
+
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error"
+      });
+    }
+  }
+);
+
 
 
 touRouter.get('/my-tournaments', verifyToken, authorizeRoles("admin"), async (req, res) => {
@@ -65,6 +98,10 @@ touRouter.get('/my-tournaments', verifyToken, authorizeRoles("admin"), async (re
     } catch (error) {
         res.status(500).json({ success: false, message: error.message })
     }
+})
+
+touRouter.post('/update', verifyToken, authorizeRoles("admin"), async(req, res) => {
+    
 })
 
 touRouter.post("/enroll/:id", verifyToken, authorizeRoles("user"), async (req, res) => {
@@ -138,3 +175,4 @@ touRouter.get("/:id", async (req, res) => {
 
     }
 })
+

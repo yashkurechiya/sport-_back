@@ -2,7 +2,6 @@ import jwt, { decode } from "jsonwebtoken";
 
 const verifyToken = (req, res, next) => {
     const authHeader = req.headers.authorization;
-    console.log("AUTH HEADER RECEIVED:", req.headers.authorization);
 
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -20,8 +19,7 @@ const verifyToken = (req, res, next) => {
             role: decoded.role
         };
 
-
-        console.log("Authenticated user:", req.user);
+ 
         next();
 
     } catch (error) {
