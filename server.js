@@ -24,11 +24,18 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 
-app.use(cors(
-  {
-    origin:"http://localhost:3000"
-  }
-));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "https://sport-front-sooty.vercel.app",
+      "https://www.goindia.online"
+    ],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use(express.json());
 app.use(bodyParser.json());
 app.use('/admin', router);
@@ -38,12 +45,12 @@ app.use("/api/tour", touRouter);
 app.use("/api/payment", Prouter)
 app.use("/api/auth", userRouter);
 app.use("/api/users", usRouter);
-app.use("/api/chat",chatRoute);
+app.use("/api/chat", chatRoute);
 // app.use("/api/payment", payRouter)
 
-redis.on("connect",()=>{
+redis.on("connect", () => {
   console.log(" Redis Connected");
-  
+
 })
 
 const io = initSocket(server);
@@ -63,7 +70,7 @@ app.set("io", io);
 
 app.post("/api/suggest-sport", suggest);
 
-server.listen(5000 , () => console.log("connected server 5000 "))
+server.listen(5000, () => console.log("connected server 5000 "))
 
 // app.get("/api/suggest-sport", getsuggest);
 
