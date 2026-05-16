@@ -9,7 +9,6 @@ export const sendMessage = async (req, res) => {
   const { message } = req.body;
   const { id, role } = req.user;
 
-  // Admin check
   if (role === "admin") {
     const isAdmin = await isAdminOfTournament(id, tournamentId);
     if (!isAdmin) {
@@ -17,7 +16,6 @@ export const sendMessage = async (req, res) => {
     }
   }
 
-  // User enrollment check ✅
   if (role === "user") {
     const enrolled = await isUserEnrolled(id, tournamentId);
 
@@ -26,7 +24,6 @@ export const sendMessage = async (req, res) => {
     }
   }
 
-  // Save message
   const msg = await Message.create({
     tournamentId,
     senderId: id,

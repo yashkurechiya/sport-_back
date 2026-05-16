@@ -1,4 +1,3 @@
-// controllers/adminChat.js
 import Conversation from "../model/conversation.js";
 
 export const adminInbox = async (req, res) => {

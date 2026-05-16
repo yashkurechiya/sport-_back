@@ -6,14 +6,32 @@ const userSchema = new mongoose.Schema({
         unique: true,
         required : true,
     },
+    email : {
+        type: String,
+        unique: true,
+        sparse: true,
+        lowercase: true,
+        trim: true,
+    },
+    googleId : {
+        type: String,
+        unique: true,
+        sparse: true,
+    },
+    provider : {
+        type: String,
+        enum: ["local", "google"],
+        default: "local",
+    },
     password : {
         type: String,
-        required : true,
+        required : false,
     },
     role : {
         type : String,
         required : true,
         enum: ["admin", "user","me"],
+        default: "user",
     }
 }, {
     timestamps : true

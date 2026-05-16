@@ -29,19 +29,19 @@ const tournamentSchema = new mongoose.Schema({
   },
 
   venue: {
-    type: String   // Example: Indoor Stadium Court 3
+    type: String    
   },
 
   image: {
-    type: String   // Tournament banner URL
+    type: String  
   },
 
   entryFee: {
-    type: Number   // Example: 500
+    type: Number   
   },
 
   prizePool: {
-    type: Number   // Example: 10000
+    type: Number  
   },
 
   rewards: {
@@ -51,19 +51,19 @@ const tournamentSchema = new mongoose.Schema({
   },
 
   type: {
-    type: String   // Singles, Doubles, Knockout, League
+    type: String    
   },
 
   skillLevel: {
-    type: String   // Beginner, Intermediate, Professional
+    type: String    
   },
 
   gender: {
-    type: String   // Male, Female, Mixed
+    type: String  
   },
 
   ageCategory: {
-    type: String   // U-16, U-19, Open
+    type: String   
   },
 
   sponsor: {
@@ -71,7 +71,7 @@ const tournamentSchema = new mongoose.Schema({
   },
 
   scheduleLink: {
-    type: String   // PDF / Google Sheet Link
+    type: String    
   },
 
   enrolled: {
@@ -79,9 +79,7 @@ const tournamentSchema = new mongoose.Schema({
     default: 0
   },
 
-  // computedState: {
-  //   type: String,
-  // },
+  
 
   category: {
     type: String
@@ -90,7 +88,7 @@ const tournamentSchema = new mongoose.Schema({
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true   // keep required for admin ownership
+    required: true   
   },
 
   participants: [
@@ -117,17 +115,17 @@ tournamentSchema.virtual("computedState").get(function () {
   const now = new Date();
 
   if (now < this.registrationStartDate) {
-    return "Upcoming";       // Enrollment not started
+    return "Upcoming";       
   }
 
   if (
     now >= this.registrationStartDate &&
     now <= this.registrationDeadline
   ) {
-    return "Started";        // Enrollment open
+    return "Started";        
   }
 
-  return "Outdated";         // Enrollment closed
+  return "Outdated";         
 });
 
 

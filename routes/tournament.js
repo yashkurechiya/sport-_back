@@ -2,6 +2,7 @@ import express, { Router } from 'express'
 import Tournament from '../models/tournament.js';
 import verifyToken from '../middlewares/authMiddlewares.js';
 import authorizeRoles from '../middlewares/roleMiddleware.js';
+import redis from '../config/redisClient.js';
 
 export const touRouter = express.Router();
 
@@ -11,10 +12,48 @@ const statePriority = {
     Outdated: 3
 }
 
+const CACHE_TTL_SECONDS = 120;
+const TOURNAMENTS_ALL_KEY = "tournaments:all";
+const tournamentByIdKey = (id) => `tournaments:id:${id}`;
+const myTournamentsKey = (userId) => `tournaments:my:${userId}`;
+
+const safeGetCache = async (key) => {
+    try {
+        const payload = await redis.get(key);
+        return payload ? JSON.parse(payload) : null;
+    } catch {
+        return null;
+    }
+};
+
+const safeSetCache = async (key, value, ttlSeconds = CACHE_TTL_SECONDS) => {
+    try {
+        await redis.set(key, JSON.stringify(value), { EX: ttlSeconds });
+    } catch {
+        // Ignore cache failures and keep request flow healthy.
+    }
+};
+
+const safeDeleteKeys = async (...keys) => {
+    try {
+        const compactKeys = keys.filter(Boolean);
+        if (compactKeys.length > 0) {
+            await redis.del(compactKeys);
+        }
+    } catch {
+        // Ignore cache failures and keep request flow healthy.
+    }
+};
+
 touRouter.post('/create', verifyToken, authorizeRoles("admin"), async (req, res) => {
     try {
         const tournament = new Tournament({ ...req.body, createdBy: req.user.id })
         await tournament.save();
+
+        await safeDeleteKeys(
+            TOURNAMENTS_ALL_KEY,
+            myTournamentsKey(req.user.id)
+        );
 
         res.status(201).json({
             success: true,
@@ -29,6 +68,11 @@ touRouter.post('/create', verifyToken, authorizeRoles("admin"), async (req, res)
 
 touRouter.get("/getTournament", async (req, res) => {
     try {
+        const cached = await safeGetCache(TOURNAMENTS_ALL_KEY);
+        if (cached) {
+            return res.status(200).json(cached);
+        }
+
         const tournaments = await Tournament.find();
         const sortedTour = tournaments.sort((a, b) => {
             return (
@@ -36,10 +80,14 @@ touRouter.get("/getTournament", async (req, res) => {
             );
         });
 
-        res.status(200).json({
+        const response = {
             success: true,
             data: sortedTour
-        });
+        };
+
+        await safeSetCache(TOURNAMENTS_ALL_KEY, response);
+
+        res.status(200).json(response);
 
     } catch (error) {
         res.status(500).json({
@@ -69,6 +117,12 @@ touRouter.delete(
 
       await Tournament.findByIdAndDelete(id);
 
+            await safeDeleteKeys(
+                TOURNAMENTS_ALL_KEY,
+                tournamentByIdKey(id),
+                myTournamentsKey(tournament.createdBy?.toString())
+            );
+
       res.status(200).json({
         success: true,
         message: "Tournament removed successfully"
@@ -88,13 +142,24 @@ touRouter.delete(
 
 touRouter.get('/my-tournaments', verifyToken, authorizeRoles("admin"), async (req, res) => {
     try {
+        const cacheKey = myTournamentsKey(req.user.id);
+        const cached = await safeGetCache(cacheKey);
+
+        if (cached) {
+            return res.status(200).json(cached);
+        }
+
         const tournaments = await Tournament.find({ createdBy: req.user.id }).sort({ createdAt: -1 });
 
-        res.status(200).json({
+        const response = {
             success: true,
             count: tournaments.length,
             data: tournaments
-        })
+        };
+
+        await safeSetCache(cacheKey, response);
+
+        res.status(200).json(response)
     } catch (error) {
         res.status(500).json({ success: false, message: error.message })
     }
@@ -124,6 +189,12 @@ touRouter.post("/enroll/:id", verifyToken, authorizeRoles("user"), async (req, r
         tournament.enrolled += 1;
 
         await tournament.save();
+
+        await safeDeleteKeys(
+            TOURNAMENTS_ALL_KEY,
+            tournamentByIdKey(req.params.id),
+            myTournamentsKey(tournament.createdBy?.toString())
+        );
 
         res.status(200).json({
             message: "Enrolled succesfully",
@@ -163,13 +234,24 @@ touRouter.get("/:id/participants", verifyToken, authorizeRoles("admin"), async (
 
 touRouter.get("/:id", async (req, res) => {
     try {
+        const cacheKey = tournamentByIdKey(req.params.id);
+        const cached = await safeGetCache(cacheKey);
+
+        if (cached) {
+            return res.status(200).json(cached);
+        }
+
         const tournament = await Tournament.findById(req.params.id);
 
         if (!tournament) {
             return res.status(404).json({ message: "Tournament not found " });
         }
 
-        res.status(200).json({ success: true, data: tournament });
+        const response = { success: true, data: tournament };
+
+        await safeSetCache(cacheKey, response);
+
+        res.status(200).json(response);
     } catch (error) {
         res.status(500).json({ message: error.message });
 
