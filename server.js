@@ -18,6 +18,7 @@ import chatRoute from "./routes/chatRoute.js";
 import rateLimit from 'express-rate-limit'
 import { RedisStore } from "connect-redis";
 import { generateToken } from "./utils/generatetoken.js";
+import { matchRoute } from "./routes/matches.js";
 
 dotenv.config();
 db(); 
@@ -70,6 +71,7 @@ app.use("/api/payment", Prouter)
 app.use("/api/auth", userRouter);
 app.use("/api/users", usRouter);
 app.use("/api/chat", chatRoute);
+app.use('/matches', matchRoute);
 
 redis.on("connect", () => {
   console.log(" Redis Connected");
