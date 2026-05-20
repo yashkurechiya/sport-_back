@@ -1,5 +1,10 @@
 import { WebSocket, WebSocketServer } from 'ws';
 
+/**
+ * Send an object as a JSON string over a WebSocket if the socket is open.
+ * @param {WebSocket} socket - The WebSocket to send the payload on.
+ * @param {*} payload - The value to serialize and send.
+ */
 function sendJson(socket, payload) {
     if (socket.readyState != WebSocket.OPEN) {
         return;
@@ -8,6 +13,15 @@ function sendJson(socket, payload) {
     socket.send(JSON.stringify(payload));
 }
 
+/**
+ * Broadcasts a payload to every connected client that is currently open.
+ *
+ * The payload is serialized with `JSON.stringify` and sent only to clients whose
+ * `readyState` is `WebSocket.OPEN`.
+ *
+ * @param {import('ws').WebSocketServer} wss - The WebSocket server whose clients will receive the message.
+ * @param {*} payload - The value to serialize and send to each open client.
+ */
 function broadcast(wss, payload) {
     for (const client of wss.clients) {
         if (client.readyState != WebSocket.OPEN) {
@@ -17,6 +31,16 @@ function broadcast(wss, payload) {
     }
 }
 
+/**
+ * Attach a WebSocket server to an existing HTTP(S) server and expose a broadcaster for new matches.
+ *
+ * The WebSocket server is mounted at path `/ws`; each new connection immediately receives a
+ * `{ type: 'welcome' }` message and per-socket errors are logged to console. Returned helper(s)
+ * can be used to broadcast messages to all currently connected clients.
+ *
+ * @param {import('http').Server} server - The HTTP(S) server to bind the WebSocketServer to.
+ * @returns {{ broadCastMatchCreated: (match: any) => void }} An object containing `broadCastMatchCreated(match)`, which broadcasts a `{ type: 'match created', data: match }` message to all connected WebSocket clients.
+ */
 export function attachWebSocket(server) {
     const wss = new WebSocketServer({
         server,
