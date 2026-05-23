@@ -19,12 +19,15 @@ import rateLimit from 'express-rate-limit'
 import { RedisStore } from "connect-redis";
 import { generateToken } from "./utils/generatetoken.js";
 import { matchRoute } from "./routes/matches.js";
+import { attachWebSocket } from "./ws/index.js";
+import { securityMiddleware } from "./arcjet.js";
 
 dotenv.config();
 db(); 
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT =Number( process.env.PORT || 5000);
+const HOST = process.env.HOST || '0.0.0.0';
 const server = http.createServer(app);
 
  
@@ -63,6 +66,7 @@ app.use(
 );
 app.use(express.json());
 app.use(bodyParser.json());
+app.use(securityMiddleware());
 app.use('/admin', router);
 app.use("/sport", sportRouter);
 app.use("/api", sportDRouter);
@@ -71,36 +75,39 @@ app.use("/api/payment", Prouter)
 app.use("/api/auth", userRouter);
 app.use("/api/users", usRouter);
 app.use("/api/chat", chatRoute);
-app.use('/matches', matchRoute);
 
 redis.on("connect", () => {
   console.log(" Redis Connected");
-
+  
 })
- 
- 
+
+
 // app.get('/', (req, res) => {
-//     res.send('<a href="/auth/google">Login with Google</a>');
-// });
-
- 
-
-app.get('/logout', (req, res)=>{
+  //     res.send('<a href="/auth/google">Login with Google</a>');
+  // });
+  
+  
+  
+  app.get('/logout', (req, res)=>{
     req.logout(() => {
-
-    res.clearCookie("token");
-
-    req.session.destroy(() => {
-
-      res.redirect(process.env.FRONTEND_URL);
-
+      
+      res.clearCookie("token");
+      
+      req.session.destroy(() => {
+        
+        res.redirect(process.env.FRONTEND_URL);
+        
+      });
+      
     });
+    
+  })
 
-  });
-
-})
-
+  app.use('/matches', matchRoute);
+  
 const io = initSocket(server);
+const { broadCastMatchCreated } = attachWebSocket(server);
+app.locals.broadCastMatchCreated = broadCastMatchCreated;
 
 app.get("/", (req, res) => {
   res.send("Server is running ✅");
@@ -112,6 +119,12 @@ app.set("io", io);
 
 app.post("/api/suggest-sport", suggest);
 
-server.listen( PORT, () => console.log(`${PORT} working`))
+server.listen(PORT, HOST, () => {
+  const baseUrl = HOST === "0.0.0.0" ? `http://localhost:${PORT}` : `http://${HOST}:${PORT}`;
+
+  console.log(`${PORT} working on ${baseUrl}`);
+  console.log(`WebSocket running on ${baseUrl.replace("http", "ws")}/ws`);
+});
+  
 
  
