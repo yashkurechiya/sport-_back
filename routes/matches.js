@@ -53,11 +53,18 @@ matchRoute.post('/', async (req, res)=>{
             awayScore: awayScore ?? 0,
             status: getMatchStatus(startTime, endTime),
         }).returning();
-        
-            if(res.app.locals.broadCastMatchCreated) {
-                res.app.locals.broadCastMatchCreated(event)
-            }
+
         res.status(201).json({ data: event });
+
+        if (res.app.locals.broadCastMatchCreated) {
+            try {
+                Promise.resolve(res.app.locals.broadCastMatchCreated(event)).catch((err) => {
+                    console.error('Failed to broadcast match created event', err);
+                });
+            } catch (err) {
+                console.error('Failed to broadcast match created event', err);
+            }
+        }
 
     } catch (error) {
         return res.status(500).json({ error:'Failed to create', details : JSON.stringify(error)});

@@ -66,6 +66,7 @@ app.use(
 );
 app.use(express.json());
 app.use(bodyParser.json());
+app.use(securityMiddleware());
 app.use('/admin', router);
 app.use("/sport", sportRouter);
 app.use("/api", sportDRouter);
@@ -101,9 +102,7 @@ redis.on("connect", () => {
     });
     
   })
-  
-  app.use(securityMiddleware());
-  
+
   app.use('/matches', matchRoute);
   
 const io = initSocket(server);
