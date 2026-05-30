@@ -21,12 +21,13 @@ import { generateToken } from "./utils/generatetoken.js";
 import { matchRoute } from "./routes/matches.js";
 import { attachWebSocket } from "./ws/index.js";
 import { securityMiddleware } from "./arcjet.js";
+import { commentaryRouter } from "./routes/commentary.js";
 
 dotenv.config();
 db(); 
 
 const app = express();
-const PORT =Number( process.env.PORT || 5000);
+const PORT =Number( process.env.PORT || 3000);
 const HOST = process.env.HOST || '0.0.0.0';
 const server = http.createServer(app);
 
@@ -104,12 +105,14 @@ redis.on("connect", () => {
   })
 
   app.use('/matches', matchRoute);
+  app.use('/matches/:id/commentary', commentaryRouter);
   
 const io = initSocket(server);
-const { broadCastMatchCreated } = attachWebSocket(server);
+const { broadCastMatchCreated, broadcastCommentary } = attachWebSocket(server);
 app.locals.broadCastMatchCreated = broadCastMatchCreated;
+app.locals.broadcastCommentary = broadcastCommentary;
 
-app.get("/", (req, res) => {
+app.get("/", (req, res) => { 
   res.send("Server is running ✅");
 });
 
