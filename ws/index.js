@@ -90,6 +90,10 @@ export function attachWebSocket(server) {
 
     wss.on('close', () => clearInterval(interval));
 
+    /**
+     * Broadcasts a "match created" event to all currently connected WebSocket clients and logs the match.
+     * @param {any} match - Payload describing the created match to include in the broadcast.
+     */
     function broadCastMatchCreated(match) {
 
         console.log("Broadcast created", match);
